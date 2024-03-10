@@ -3,7 +3,6 @@ const app = express();
 const mongoose = require('mongoose');
 require('./UserDetails'); 
 const bcrypt = require('bcrypt');
-
 app.use(express.json());
 
 const mongoURL = "mongodb+srv://nitish12015121:lqbFDmlwXkdGLWfo@cluster0.5g3nygp.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
@@ -26,6 +25,27 @@ app.get("/", (req, res) =>{
 
 const User = mongoose.model("UserInfo");
 
+
+app.post("/login" , async(req, res) =>{
+    const {email , password} = req.body;
+    console.log(req.body);
+
+    const oldUser = await User.findOne({email: email});
+
+    if ( !oldUser ){
+        return res.send({ data: "User doesn't exist"});
+    }
+    else{
+        const isPasswordValid = await bcrypt.compare(password, oldUser.password);
+        if ( isPasswordValid ){
+            res.send({status: "Login Successfull"});
+        }
+        else{
+            res.send({status: "Incorrect Password"});
+        }
+    }
+})
+
 app.post("/signup", async(req, res) => {
     const {name , email, password} = req.body;
 
@@ -33,7 +53,7 @@ app.post("/signup", async(req, res) => {
     const oldUser = await User.findOne({email: email});
 
     if ( oldUser){
-        return res.send({data: "User already exist"});
+        return res.send({status : "User already exist"});
     }
     const encryptedPassword = await bcrypt.hash(password , 10);
     try {
